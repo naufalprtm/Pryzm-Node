@@ -254,19 +254,104 @@ sudo systemctl start pryzm
 ```
 
 
+# Managing keys
 
 
+```
+#Generate new key
+pryzmd keys add wallet
+
+#Recover key
+pryzmd keys add wallet --recover
+
+#List all key
+pryzmd keys list
+
+#Delete key
+pryzmd keys delete wallet
+
+#Export key
+pryzmd keys export wallet
+
+#Import key
+pryzmd keys import wallet wallet.backup
+
+#Query wallet balances
+pryzmd q bank balances $(pryzmd keys show wallet -a)
+```
+
+# Managing validators
+
+```
+pryzmd tx staking create-validator \
+--amount 1000000upryzm \
+--pubkey $(pryzmd tendermint show-validator) \
+--moniker "your-moniker-name" \
+--identity "your-keybase-id" \
+--details "your-details" \
+--website "your-website" \
+--security-contact "your-email" \
+--chain-id indigo-1 \
+--commission-rate 0.05 \
+--commission-max-rate 0.20 \
+--commission-max-change-rate 0.01 \
+--min-self-delegation 1 \
+--from wallet \
+--gas-adjustment 1.4 \
+--gas auto \
+--gas-prices 0.015upryzm \
+-y
+```
 
 
+# Edit validator
+
+```
+pryzmd tx staking edit-validator \
+--new-moniker "your-moniker-name" \
+--identity "your-keybase-id" \
+--details "your-details" \
+--website "your-website" \
+--security-contact "your-email" \
+--chain-id indigo-1 \
+--commission-rate 0.05 \
+--from wallet \
+--gas-adjustment 1.4 \
+--gas auto \
+--gas-prices 0.015upryzm \
+-y
+```
+
+```
+#Unjail validator
+pryzmd tx slashing unjail --from wallet --chain-id indigo-1 --gas-adjustment 1.4 --gas auto --gas-prices 0.015upryzm -y
+
+#Validator jail reason
+pryzmd query slashing signing-info $(pryzmd tendermint show-validator)
+
+#List active validator
+pryzmd q staking validators -oj --limit=3000 | jq '.validators[] | select(.status=="BOND_STATUS_BONDED")' | jq -r '(.tokens|tonumber/pow(10; 6)|floor|tostring) + " \t " + .description.moniker' | sort -gr | nl
+
+#List incative validator
+pryzmd q staking validators -oj --limit=3000 | jq '.validators[] | select(.status=="BOND_STATUS_UNBONDED")' | jq -r '(.tokens|tonumber/pow(10; 6)|floor|tostring) + " \t " + .description.moniker' | sort -gr | nl
+
+#View validator details
+pryzmd q staking validator $(pryzmd keys show wallet --bech val -a)
+```
 
 
+# Remove node
 
-
-
-
-
-
-
+```
+cd $HOME
+sudo systemctl stop pryzm
+sudo systemctl disable pryzm
+sudo rm /etc/systemd/system/pryzm.service
+sudo systemctl daemon-reload
+sudo rm -f $(which pryzmd)
+sudo rm -rf $HOME/.pryzm
+sudo rm -rf $HOME/go
+```
 
 
 
